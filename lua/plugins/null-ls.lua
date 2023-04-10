@@ -4,6 +4,7 @@ return {
 
         dependencies = {
             {'neovim/nvim-lspconfig'}, {'nvim-lua/plenary.nvim'},
+            -- this is a local copy of https://github.com/semanticart/ruby-code-actions.nvim
             {dir = "~/src/ruby-code-actions.nvim"}
         },
 
