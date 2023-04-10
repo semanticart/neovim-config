@@ -39,7 +39,7 @@ local get_root = function()
 end
 
 local each_capture = function(query)
-    local parsed_query = ts.query.parse_query("markdown", query)
+    local parsed_query = ts.query.parse("markdown", query)
 
     local root = get_root()
 
