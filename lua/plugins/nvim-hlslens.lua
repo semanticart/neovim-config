@@ -17,8 +17,7 @@ return {
             {'*', [[*<Cmd>lua require('hlslens').start()<CR>]]},
             {'#', [[#<Cmd>lua require('hlslens').start()<CR>]]},
             {'g*', [[g*<Cmd>lua require('hlslens').start()<CR>]]},
-            {'g#', [[g#<Cmd>lua require('hlslens').start()<CR>]]},
-            {'<Leader>l', ':noh<CR>'}
+            {'g#', [[g#<Cmd>lua require('hlslens').start()<CR>]]}
             -- LuaFormatter on
         }
     }

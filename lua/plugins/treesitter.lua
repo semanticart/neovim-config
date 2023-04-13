@@ -15,8 +15,8 @@ return {
                 ensure_installed = {
                     "elixir", "heex", "eex", "erlang", -- elixir
                     "ruby", "css", "html", "javascript", "json", "scss", "tsx",
-                    "graphql", "lua", "regex", "vim", "yaml", "bash", "fish",
-                    "markdown", "markdown_inline"
+                    "graphql", "lua", "regex", "vim", "vimdoc", "yaml", "bash",
+                    "fish", "markdown", "markdown_inline"
                 },
                 custom_captures = {},
                 incremental_selection = {

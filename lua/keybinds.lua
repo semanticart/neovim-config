@@ -79,16 +79,49 @@ if vim.fn.isdirectory(".git") ~= 0 then
     end)
 end
 
-vim.cmd([[
-  function! NewZettel()
-    let sha = trim(system("openssl rand -hex 4"))
-    let new_name = input('New file name: ', sha . ".md", 'file')
+vim.keymap.set("n", "<leader>D", function()
+    local buffer_to_unload = vim.api.nvim_get_current_buf()
+    vim.cmd("bprevious")
+    vim.cmd("bdelete " .. buffer_to_unload)
+end, {noremap = true, silent = true})
 
-    exec ':vsplit /Users/ship/Dropbox/neuron/' . new_name
-    redraw!
-  endfunction
-  nnoremap gzn :call NewZettel()<cr>
-]])
+local cleanup_buffer = function()
+    -- no thanks, paste mode
+    vim.opt.paste = false
+
+    vim.api.nvim_command("silent! %s/\\t/  /")
+    vim.api.nvim_command("silent! %s/\\s\\+$//")
+    vim.api.nvim_command("silent! %s/\\n\\n\\n/\\r\\r/g")
+    vim.api.nvim_command("silent! LspRestart")
+
+    -- close floating windows
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local config = vim.api.nvim_win_get_config(win)
+        if config.relative ~= "" then vim.api.nvim_win_close(win, false) end
+    end
+
+    vim.api.nvim_command("update")
+    vim.api.nvim_command("silent e")
+end
+
+vim.keymap.set('n', '<BS><BS>', cleanup_buffer, {noremap = true})
+
+local new_zettel = function()
+    local sha = vim.fn.trim(vim.fn.system("openssl rand -hex 4"))
+    local new_name = vim.fn.input('New file name: ', sha .. ".md", 'file')
+
+    local zettel_root = vim.env.ZETTEL_ROOT or ''
+    if zettel_root == '' then
+        error('ZETTEL_ROOT environment variable not set.')
+    end
+
+    local file_path = zettel_root .. '/' .. new_name
+
+    vim.cmd('vsplit ' .. file_path)
+    vim.cmd('redraw!')
+end
+
+vim.keymap.set('n', 'gzn', new_zettel, {noremap = true})
 
 vim.keymap.set('n', 'gzo', ':Telescope find_files cwd=~/Dropbox/neuron<CR>')
 vim.keymap.set('n', 'gza', ':Telescope live_grep cwd=~/Dropbox/neuron<CR>')

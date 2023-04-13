@@ -1,28 +1,3 @@
-local hint_char1_and_then = function(c, and_then_func)
-    local hop = require("hop")
-    local jump_target = require("hop.jump_target")
-
-    return function()
-        local opts = hop.opts
-        local generator = jump_target.jump_targets_by_scanning_lines
-        hop.hint_with_callback(generator(
-                                   jump_target.regex_by_case_searching(c, true,
-                                                                       opts)),
-                               opts, function(jt)
-            hop.move_cursor_to(jt.window, jt.line + 1, jt.column - 1,
-                               opts.hint_offset)
-            and_then_func()
-        end)
-    end
-end
-
-local feedkeys = function(keys)
-    vim.schedule(function()
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false,
-                                                             true), "n", true)
-    end)
-end
-
 return {
     {
         'phaazon/hop.nvim',
@@ -30,6 +5,32 @@ return {
         config = function() require('hop').setup() end,
 
         keys = function()
+            local hint_char1_and_then = function(c, and_then_func)
+                local hop = require("hop")
+                local jump_target = require("hop.jump_target")
+
+                return function()
+                    local opts = hop.opts
+                    local generator = jump_target.jump_targets_by_scanning_lines
+                    hop.hint_with_callback(generator(
+                                               jump_target.regex_by_case_searching(
+                                                   c, true, opts)), opts,
+                                           function(jt)
+                        hop.move_cursor_to(jt.window, jt.line + 1,
+                                           jt.column - 1, opts.hint_offset)
+                        and_then_func()
+                    end)
+                end
+            end
+
+            local feedkeys = function(keys)
+                vim.schedule(function()
+                    vim.api.nvim_feedkeys(
+                        vim.api.nvim_replace_termcodes(keys, true, false, true),
+                        "n", true)
+                end)
+            end
+
             local keys = {
                 {
                     '<space>',
