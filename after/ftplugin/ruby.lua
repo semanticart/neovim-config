@@ -85,4 +85,4 @@ end
 vim.keymap.set("n", "H", definition_preview,
                {buffer = 0, desc = "Definition Preview"})
 
-vim.keymap.set('n', '<CR>', vim.lsp.buf.code_action, {buffer = 0})
+-- vim.keymap.set('n', '<CR>', vim.lsp.buf.code_action, {buffer = 0})

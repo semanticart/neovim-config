@@ -1,1 +1,1 @@
-return {{'wsdjeg/vim-fetch'}}
+return {{'wsdjeg/vim-fetch', lazy = false}}

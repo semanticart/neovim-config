@@ -32,7 +32,7 @@ vim.keymap.set('n', '<leader>fr', rename_file)
 vim.keymap.set('n', '<leader>fp', function() print(vim.fn.expand('%')) end)
 
 -- clear search
-vim.keymap.set('n', '\\', ':noh<CR>')
+vim.keymap.set('n', '\\', '<CMD>silent noh<CR>')
 
 -- easy split navigation
 vim.keymap.set('n', '<C-h>', '<C-w>h')
