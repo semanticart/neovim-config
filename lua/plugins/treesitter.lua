@@ -5,6 +5,7 @@ return {
             'nvim-treesitter/nvim-treesitter-textobjects',
             'nvim-treesitter/playground'
         },
+        event = "VeryLazy",
         build = ':TSUpdate',
         config = function()
             require'nvim-treesitter.configs'.setup {
@@ -67,7 +68,8 @@ return {
                         goto_node = '<cr>',
                         show_help = '?'
                     }
-                }
+                },
+                matchup = {enable = true, include_match_words = true}
             }
         end
     }

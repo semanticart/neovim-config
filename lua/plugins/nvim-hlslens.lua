@@ -4,6 +4,8 @@ return {
 
         config = function() require('hlslens').setup() end,
 
+        event = "VeryLazy",
+
         keys = {
             -- LuaFormatter off
             {

@@ -2,8 +2,11 @@ return {
     {
         'tpope/vim-git',
         dependencies = {{'tpope/vim-fugitive'}, {'tpope/vim-rhubarb'}},
+        event = "VeryLazy",
+
         config = function()
             vim.opt.diffopt:append('vertical')
+            vim.opt.diffopt:append('linematch:60')
             vim.api.nvim_exec([[
        cabbrev GVsplit Gvsplit
        cabbrev GSplit Gsplit

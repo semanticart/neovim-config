@@ -4,6 +4,8 @@ return {
 
         dependencies = {{'tom-anders/telescope-vim-bookmarks.nvim'}},
 
+        event = "VeryLazy",
+
         config = function()
             vim.g.bookmark_highlight_lines = 1
 

@@ -1,6 +1,7 @@
 return {
     {
         'ziontee113/neo-minimap',
+        event = "VeryLazy",
 
         config = function()
             local nm = require("neo-minimap")

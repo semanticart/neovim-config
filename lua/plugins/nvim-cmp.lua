@@ -5,18 +5,72 @@ return {
             {'neovim/nvim-lspconfig'}, {'hrsh7th/cmp-nvim-lsp'},
             {'hrsh7th/cmp-buffer'}, {'hrsh7th/cmp-path'},
             {'hrsh7th/cmp-nvim-lua'}, {'saadparwaiz1/cmp_luasnip'},
-            {'hrsh7th/cmp-nvim-lsp-signature-help', 'onsails/lspkind-nvim'}
+            {'hrsh7th/cmp-nvim-lsp-signature-help'}
         },
+        event = "VeryLazy",
         config = function()
             local luasnip = require("luasnip")
             local cmp = require("cmp")
-            local lspkind = require('lspkind')
+            local compare = require("cmp.config.compare")
+
+            local kind_icons = {
+                Text = "",
+                Method = "󰆧",
+                Function = "󰊕",
+                Constructor = "",
+                Field = "󰇽",
+                Variable = "󰂡",
+                Class = "󰠱",
+                Interface = "",
+                Module = "",
+                Property = "󰜢",
+                Unit = "",
+                Value = "󰎠",
+                Enum = "",
+                Keyword = "󰌋",
+                Snippet = "",
+                Color = "󰏘",
+                File = "󰈙",
+                Reference = "",
+                Folder = "󰉋",
+                EnumMember = "",
+                Constant = "󰏿",
+                Struct = "",
+                Event = "",
+                Operator = "󰆕",
+                TypeParameter = "󰅲"
+            }
 
             cmp.setup({
+                formatting = {
+                    format = function(entry, vim_item)
+                        if vim_item.kind == 'Constant' then
+                            vim_item.kind = ''
+                        else
+                            -- Kind icons
+                            vim_item.kind =
+                                string.format('%s %s',
+                                              kind_icons[vim_item.kind],
+                                              vim_item.kind) -- This concatonates the icons with the name of the item kind
+                        end
+
+                        -- Source
+                        vim_item.menu = ({
+                            buffer = "[Buffer]",
+                            nvim_lsp = "[LSP]",
+                            luasnip = "[LuaSnip]",
+                            nvim_lua = "[Lua]",
+                            latex_symbols = "[LaTeX]"
+                        })[entry.source.name]
+                        return vim_item
+                    end
+                },
+                -- sorting = {comparators = {compare.sort_text}},
                 sources = {
                     {name = 'luasnip'}, {name = 'nvim_lsp'},
-                    {name = "nvim_lsp_signature_help"}, {name = 'nvim_lua'},
-                    {name = 'path'}, {name = 'buffer', keyword_length = 5}
+                    -- {name = "nvim_lsp_signature_help"},
+                    {name = 'nvim_lua'}, {name = 'path'},
+                    {name = 'buffer', keyword_length = 5}
                 },
 
                 snippet = {
@@ -27,7 +81,10 @@ return {
 
                 view = {entries = 'native'},
 
-                formatting = {format = lspkind.cmp_format()},
+                window = {
+                    completion = cmp.config.window.bordered(),
+                    documentation = cmp.config.window.bordered()
+                },
 
                 mapping = {
                     ["<c-k>"] = cmp.mapping(function(fallback)
@@ -69,7 +126,9 @@ return {
                     ['<c-b>'] = cmp.mapping(cmp.mapping.scroll_docs(-4),
                                             {'i', 'c'}),
                     ['<c-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4),
-                                            {'i', 'c'})
+                                            {'i', 'c'}),
+
+                    ['<CR>'] = cmp.mapping.confirm({select = true})
                 }
             })
         end

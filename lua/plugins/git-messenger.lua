@@ -1,3 +1,7 @@
 return {
-    {'rhysd/git-messenger.vim', keys = {{'<leader>gg', ':GitMessenger<CR>'}}}
+    {
+        'rhysd/git-messenger.vim',
+        event = "VeryLazy",
+        keys = {{'<leader>gg', ':GitMessenger<CR>'}}
+    }
 }

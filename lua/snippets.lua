@@ -157,7 +157,8 @@ ls.add_snippets("rust", {
 
 ls.add_snippets("markdown", {
     ps("[", "[${1:description}](${2:url})$0"),
-    ps("det", "<details>\n\t<summary>$1</summary>\n\n$2\n</details>")
+    ps("det", "<details>\n\t<summary>$1</summary>\n\n$2\n</details>"),
+    ps("tags", "---\ntags:\n  - $1\n---")
 })
 
 -- only used when reloading

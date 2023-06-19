@@ -1,6 +1,7 @@
 return {
     {
         'mechatroner/rainbow_csv',
+        event = "VeryLazy",
         config = function()
             vim.api.nvim_exec([[
               let g:rbql_with_headers = 1

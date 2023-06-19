@@ -1,1 +1,1 @@
-return {{'tpope/vim-projectionist'}}
+return {{'tpope/vim-projectionist', lazy = false}}

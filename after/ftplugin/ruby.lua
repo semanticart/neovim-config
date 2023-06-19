@@ -1,37 +1,40 @@
+vim.keymap.set('n', '<CR>', function()
+    vim.lsp.codelens.run()
+
+    pcall(function()
+        vim.lsp.inlay_hint.enable(0, false)
+        vim.lsp.inlay_hint.enable(0, true)
+    end)
+
+end, {buffer = 0})
+
 local grep_str = function()
-    return "(class |def |module |self\\.|::)" .. vim.fn.expand('<cword>') ..
-               "\\b"
+    -- return "(class |def |module |self\\.|::)" .. vim.fn.expand('<cword>') ..
+    return "(class |def |module |self\\.)" .. vim.fn.expand('<cword>') .. "\\b"
 end
 
-local Job = require('plenary.job')
-local live_grep = require('telescope.builtin').live_grep
-
 if LSP then
-    LSP.FindDefinitions.rb = function()
-        -- NOTE: do not refactor this into the `on_exit` below. It causes the UI to hang (even if wrapped in a defer)
-        local results
+    local live_grep = require('telescope.builtin').live_grep
 
-        Job:new({
-            command = 'ag', -- not sure why rg isn't working correctly here
-            args = {grep_str()},
-            on_exit = function(j, return_val)
-                if return_val > 0 then
-                    vim.notify(vim.inspect(j), "error")
-                end
-                results = j:result()
-            end
-        }):sync()
+    LSP.FindDefinitions.rb = function()
+        local result =
+            vim.system({'rg', '--vimgrep', grep_str()}, {text = true}):wait()
+
+        local results = vim.split(vim.trim(result.stdout), "\n")
 
         if results then
             if table.getn(results) > 1 then
                 live_grep {default_text = grep_str()}
             else
-                local parts = vim.split(results[1], ":")
-                local file = parts[1]
-                local line = tonumber(parts[2])
+                if results[1] ~= "" then
+                    local parts = vim.split(results[1], ":")
+                    local file = parts[1]
+                    local line = tonumber(parts[2])
 
-                -- TODO: more-lua way to do this
-                vim.cmd("execute \"edit +" .. line .. " " .. file .. "\"", false)
+                    -- TODO: more-lua way to do this
+                    vim.cmd("execute \"edit +" .. line .. " " .. file .. "\"",
+                            false)
+                end
             end
         end
     end
@@ -85,4 +88,5 @@ end
 vim.keymap.set("n", "H", definition_preview,
                {buffer = 0, desc = "Definition Preview"})
 
--- vim.keymap.set('n', '<CR>', vim.lsp.buf.code_action, {buffer = 0})
+-- vim.lsp.set_log_level("DEBUG")
+-- -- vim.cmd [[ set nonumber ]]

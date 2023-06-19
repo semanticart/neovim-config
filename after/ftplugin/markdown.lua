@@ -4,7 +4,7 @@ local o = vim.opt
 o.shiftwidth = 2
 o.softtabstop = 2
 o.expandtab = true
-o.conceallevel = 1
+o.conceallevel = 2
 
 o.spell = true
 
@@ -24,11 +24,7 @@ local md_preview = function()
 
     local to_open = vim.fn.expand('%')
 
-    if string.find(vim.fn.expand("%:p"), zettel_dir) then
-        to_open = zettel_http_root .. vim.fn.expand("%:t:r")
-    end
-
-    vim.fn.system({"open", to_open})
+    vim.system({"open", to_open})
 end
 
 local insert_text = helpers.insert_text
@@ -111,22 +107,6 @@ local zettel_link_under_cursor = function()
     local path = vim.fn.expand("%:h") .. "/" .. note .. ".md"
 
     return {path, note}
-end
-
--- TODO: this is messy. Probably should user require/etc so LSP and LSP.Hover always exist
-if LSP then
-    LSP.Hover = LSP.Hover or {}
-
-    LSP.Hover.md = function()
-        local path = zettel_link_under_cursor()[1]
-
-        -- remove prefix ./ (if present)
-        path = path:gsub("^%./", "")
-
-        if not string.find(path, "/") then path = zettel_dir .. path end
-
-        LSP.preview_location(path)
-    end
 end
 
 local open_zettel_link = function(force)
@@ -216,33 +196,34 @@ vim.keymap.set('n', '<leader>R', md_preview, {desc = 'Preview', buffer = 0})
 vim.keymap.set('n', '<leader>d', find_or_insert_date_header,
                {desc = 'Find/insert Today header', buffer = 0})
 
-vim.cmd([[
-function! ToggleCheckboxCheck()
-	let line = getline('.')
-	if(match(line, "- \\[[x -]\\]") == -1)
-    return ToggleCheckbox()
-  end
+local function toggle_checkbox()
+    local line = vim.api.nvim_get_current_line()
 
-	let l:lookup = {" ": "x", "x": "-", "-": " "}
-  silent execute ':s/\v\[(.)\]/\="[" . l:lookup[submatch("1")]. "]"/'
-endfunction
+    if string.match(line, "- %[[x %-]%]") then
+        line = string.gsub(line, "- %[[x %-]%]", "-", 1)
+    else
+        line = string.gsub(line, "-", "- [ ]", 1)
+    end
 
-noremap <buffer> <c-c><c-c> :call ToggleCheckboxCheck()<CR>
+    vim.api.nvim_set_current_line(line)
+end
 
-function! ToggleCheckbox()
-	let line = getline('.')
+local function toggle_checkbox_check()
+    local line = vim.api.nvim_get_current_line()
 
-	if(match(line, "- \\[[x -]\\]") != -1)
-		let line = substitute(line, "- \\[[x -]\\]", "-", "")
-	else
-		let line = substitute(line, "-", "- [ ]", "")
-	endif
+    if not string.match(line, "- %[[x %-]%]") then return toggle_checkbox() end
 
-	call setline('.', line)
-endfunction
+    local lookup = {[" "] = "x", ["x"] = "-", ["-"] = " "}
+    line = string.gsub(line, "%[(.)%]",
+                       function(m) return "[" .. lookup[m] .. "]" end)
+    vim.api.nvim_set_current_line(line)
+end
 
-noremap <buffer> <c-c><c-i> :call ToggleCheckbox()<CR>
-]], false)
+vim.keymap.set('n', '<c-c><c-c>', toggle_checkbox_check,
+               {noremap = true, silent = true, buffer = true})
+
+vim.keymap.set('n', '<c-c><c-i>', toggle_checkbox,
+               {noremap = true, silent = true, buffer = true})
 
 vim.cmd([[
 Abolish recieve receive
@@ -259,6 +240,15 @@ iabbrev :review: 
 iabbrev :log: 
 iabbrev :pr: 
 iabbrev :task: 
+iabbrev :tu: 👍
+iabbrev :td: 👎
+iabbrev :plz: 🙏
+iabbrev :update: 🔄
+iabbrev :gh: 
+iabbrev :yt: 
+iabbrev :li: 
+iabbrev :twitter: 
+iabbrev :short: 🩳
 ]])
 
 vim.cmd([[
@@ -291,13 +281,80 @@ command! -buffer TableFormat call s:TableFormat()
 ]])
 
 -- up and down considers wrapped content (but still respect counts)
-vim.cmd([[
-nnoremap <buffer> <expr> j v:count ? 'j' : 'gj'
-nnoremap <buffer> <expr> k v:count ? 'k' : 'gk'
-]])
+vim.keymap.set('n', 'j', 'v:count ? "j" : "gj"',
+               {noremap = true, expr = true, buffer = true})
+vim.keymap.set('n', 'k', 'v:count ? "k" : "gk"',
+               {noremap = true, expr = true, buffer = true})
 
 vim.cmd([[
-  command! -buffer Marked :silent !open -a "Marked 2" "%"
+  command! -buffer Marked silent !open -a "Marked" "%"
+  command! -buffer Focused silent !open -a "Focused" "%"
 ]])
 
 vim.api.nvim_set_hl(0, "@shortcut_link_text", {fg = "#ffc777"})
+
+local function swapTableRows()
+    -- Get the current line number and content
+    local current_line_num = vim.api.nvim_win_get_cursor(0)[1]
+    local current_line = vim.api.nvim_get_current_line()
+
+    -- Prompt for the target line number
+    vim.ui.input({prompt = "Enter line number to swap with: "},
+                 function(target_line_num)
+        target_line_num = tonumber(target_line_num)
+
+        -- Validation
+        if not target_line_num or target_line_num < 1 or target_line_num ==
+            current_line_num then
+            print("Invalid line number")
+            return
+        end
+
+        -- Get the target line content
+        local target_line = vim.api.nvim_buf_get_lines(0, target_line_num - 1,
+                                                       target_line_num, false)[1]
+
+        -- Extract content after the second '|'
+        local function extractContentAfterSecondPipe(line)
+            local firstPipeIndex = line:find("|")
+            local secondPipeIndex = firstPipeIndex and
+                                        line:find("|", firstPipeIndex + 1)
+            return secondPipeIndex and line:sub(secondPipeIndex) or nil
+        end
+
+        local current_line_content = extractContentAfterSecondPipe(current_line)
+        local target_line_content = extractContentAfterSecondPipe(target_line)
+
+        if current_line_content == nil or target_line_content == nil then
+            print("Error: Invalid table format")
+            return
+        end
+
+        -- Swap the contents, keeping the 'Week' and 'Topic' columns intact
+        local swapped_current_line = current_line:sub(1, current_line:find("|",
+                                                                           current_line:find(
+                                                                               "|") +
+                                                                               1) -
+                                                          1) ..
+                                         target_line_content
+        local swapped_target_line = target_line:sub(1, target_line:find("|",
+                                                                        target_line:find(
+                                                                            "|") +
+                                                                            1) -
+                                                        1) ..
+                                        current_line_content
+
+        -- Set the modified lines back to the buffer
+        vim.api.nvim_buf_set_lines(0, current_line_num - 1, current_line_num,
+                                   false, {swapped_current_line})
+        vim.api.nvim_buf_set_lines(0, target_line_num - 1, target_line_num,
+                                   false, {swapped_target_line})
+    end)
+end
+
+-- Register the function in the global table for calling from command-line
+_G.swapTableRows = swapTableRows
+
+-- Optional: Map the function to a keybinding
+vim.api.nvim_set_keymap('n', '<leader>sw', ':lua swapTableRows()<CR>',
+                        {noremap = true, silent = true})

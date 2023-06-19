@@ -7,6 +7,7 @@ return {
     {
         'nvim-telescope/telescope.nvim',
         dependencies = {'nvim-lua/plenary.nvim'},
+        event = "VeryLazy",
 
         config = function()
             require('telescope').setup {
@@ -120,7 +121,7 @@ return {
                 },
                 {
                     '<leader>T',
-                    ':Telescope lsp_workspace_symbols<cr>',
+                    ':Telescope lsp_document_symbols<cr>',
                     desc = 'Pick symbol'
                 }, {
                     '<leader>vt',

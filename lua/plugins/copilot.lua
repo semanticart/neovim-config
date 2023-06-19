@@ -1,6 +1,8 @@
 return {
     {
         'github/copilot.vim',
+        event = "VeryLazy",
+        enabled = not SCREENCAST,
         config = function()
             vim.g.copilot_node_command =
                 "/Users/ship/.asdf/installs/nodejs/16.13.1/bin/node"

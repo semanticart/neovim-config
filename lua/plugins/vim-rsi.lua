@@ -1,1 +1,1 @@
-return {{'tpope/vim-rsi'}}
+return {{'tpope/vim-rsi', event = "VeryLazy"}}

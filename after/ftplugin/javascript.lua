@@ -43,15 +43,26 @@ end
 local toggle_only = function()
     local line = vim.fn.getline('.')
 
-    P(vim.fn.match(line, ".only("))
+    local things_to_match = {
+        {"describe(", "describe.only(", "describe.skip(", "describe.todo("},
+        {" it(", " it.only(", " it.skip(", " it.todo("},
+        {" test(", " test.only(", " test.skip(", " test.todo("}
+    }
 
-    if (vim.fn.match(line, ".only(") == -1) then
-        line = vim.fn.substitute(line, "(", ".only(", "")
-    else
-        line = vim.fn.substitute(line, ".only(", "(", "")
+    for _, thing in ipairs(things_to_match) do
+        for i = 1, #thing do
+            local item1 = thing[i]
+            local item2 = thing[i + 1]
+
+            if (item2 == nil) then item2 = thing[1] end
+
+            if (vim.fn.match(line, item1) ~= -1) then
+                line = vim.fn.substitute(line, item1, item2, "")
+                vim.fn.setline('.', line)
+                return
+            end
+        end
     end
-
-    vim.fn.setline('.', line)
 end
 
 vim.keymap.set("n", ",o", toggle_only, {buffer = 0})

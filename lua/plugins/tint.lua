@@ -1,20 +1,16 @@
 return {
     {
         'levouh/tint.nvim',
+        event = "VeryLazy",
         config = function()
             require("tint").setup({
-                bg = false, -- Tint background portions of highlight groups
-                amt = -30 -- Darken colors, use a positive value to brighten
+                transforms = {
+                    require("tint.transforms").tint_with_threshold(-35,
+                                                                   "#1C1C1C",
+                                                                   150), -- Try to tint by `-100`, but keep all colors at least `150` away from `#1C1C1C`
+                    require("tint.transforms").saturate(0.6)
+                }
             })
-
-            -- Disable when nvim loses focus
-            vim.api.nvim_exec([[
-  augroup WindowManagement
-    autocmd!
-    autocmd FocusLost * lua require("tint").disable()
-    autocmd FocusGained * lua require("tint").enable()
-  augroup END
-]], false)
         end
     }
 }

@@ -2,7 +2,11 @@ return {
     {
         'nvim-lualine/lualine.nvim',
 
+        enabled = not SCREENCAST,
+
         dependencies = {'nvim-tree/nvim-web-devicons', 'ThePrimeagen/harpoon'},
+
+        event = "VeryLazy",
 
         config = function()
             local has_alternate_file = function()
@@ -55,17 +59,10 @@ return {
                     },
                     lualine_c = {
                         function()
-                            local marks =
-                                require('harpoon').get_mark_config().marks
-
-                            for i, item in pairs(marks) do
-                                -- check if it matches relative or absolute path
-                                if item.filename == vim.fn.expand('%:t') or
-                                    item.filename == vim.fn.expand('%') or
-                                    vim.fn.getcwd() .. '/' .. item.filename ==
-                                    vim.fn.expand('%') then
-                                    return i
-                                end
+                            if require('harpoon.mark').get_current_index() ~=
+                                nil then
+                                return "🔱" ..
+                                           require('harpoon.mark').get_current_index()
                             end
 
                             return ""

@@ -46,9 +46,12 @@ M.unmemoize = function(name) vim.api.nvim_buf_del_var(0, name) end
 
 local terminal_app = "Kitty"
 
-M.send_to_app = function(application)
+local send_to_app = function(application, refocus_terminal)
     local output_file = "/tmp/send-to-app.scpt"
-    vim.fn.setreg('*', vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    local content = vim.trim(table.concat(
+                                 vim.api.nvim_buf_get_lines(0, 0, -1, false),
+                                 "\n"))
+    vim.fn.setreg('*', content)
 
     local output_io = io.open(output_file, "w")
 
@@ -57,13 +60,23 @@ M.send_to_app = function(application)
     io.write(
         "tell application \"System Events\" to keystroke \"v\" using {command down}" ..
             "\n")
-    io.write("delay 0.1" .. "\n")
-    io.write("tell application \"System Events\" to keystroke return" .. "\n")
-    io.write("activate application \"" .. terminal_app .. "\"" .. "\n")
+
+    if refocus_terminal then
+        io.write("delay 0.1" .. "\n")
+        io.write("tell application \"System Events\" to keystroke return" ..
+                     "\n")
+        io.write("activate application \"" .. terminal_app .. "\"" .. "\n")
+    end
+
     io.close()
 
     vim.fn.system("osascript " .. output_file)
 end
+
+M.send_to_app = function(application) send_to_app(application, true) end
+
+-- send to app but keep focus on the app
+M.fsend_to_app = function(application) send_to_app(application, false) end
 
 M.time = function(callback)
     local start = os.clock()

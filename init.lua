@@ -1,3 +1,5 @@
+SCREENCAST = os.getenv("SCREENCAST") ~= nil
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({
@@ -27,6 +29,13 @@ RELOAD = function(...) return require("plenary.reload").reload_module(...) end
 R = function(name)
     RELOAD(name)
     return require(name)
+end
+
+SILENTLY = function(fn)
+    local original_print = print
+    print = function() end
+    pcall(fn)
+    print = original_print
 end
 
 require("settings")

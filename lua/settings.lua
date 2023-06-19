@@ -85,3 +85,11 @@ vim.cmd "command! Mkdir :execute ':silent !mkdir -p %:h'"
 
 -- allow selecting beyond actual characters in visual mode
 vim.opt.virtualedit = "block"
+
+vim.cmd [[
+  autocmd FileType qf if (getwininfo(win_getid())[0].loclist != 1) | wincmd J | endif
+]]
+
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldlevel = 20

@@ -1,1 +1,1 @@
-return {{'nvim-telescope/telescope-symbols.nvim'}}
+return {{'nvim-telescope/telescope-symbols.nvim', event = "VeryLazy"}}

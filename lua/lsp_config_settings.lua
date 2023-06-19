@@ -102,7 +102,11 @@ local reference_fun = function(client, buffer_extension)
 end
 
 local hover_fun = function(client, buffer_extension)
-    return function() hover(buffer_extension) end
+    if client.server_capabilities.hoverProvider then
+        return function() vim.lsp.buf.hover() end
+    else
+        return function() hover(buffer_extension) end
+    end
 end
 
 local definition_fun = function(client, buffer_extension)
@@ -131,13 +135,17 @@ end
 local on_attach = function(client, bufnr)
     local buffer_extension = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":e")
 
-    local buf_set_option = function(...)
-        vim.api.nvim_buf_set_option(bufnr, ...)
-    end
+    -- local buf_set_option = function(...)
+    --     vim.api.nvim_buf_set_option(bufnr, ...)
+    -- end
 
-    if client.supports_method('textDocument/completion') then
-        buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
-    end
+    -- if client.supports_method('textDocument/completion') then
+    --     P("COMPLETION")
+    --     vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+    -- end
+
+    if client.server_capabilities.inlayHintProvider and os.getenv("SCREENCAST") ~=
+        nil then vim.lsp.inlay_hint.enable(bufnr, true) end
 
     if client.server_capabilities.colorProvider then
         -- Attach document colour support
@@ -162,6 +170,38 @@ local on_attach = function(client, bufnr)
         vim.cmd([[ set formatexpr= ]])
     end
 
+    -- if client.supports_method("textDocument/diagnostic") then
+    --     vim.api.nvim_create_autocmd({'BufEnter', 'BufWritePre', 'CursorHold'}, {
+    --         buffer = bufnr,
+    --
+    --         callback = function()
+    --             local params = vim.lsp.util.make_text_document_params(bufnr)
+    --
+    --             client.request('textDocument/diagnostic',
+    --                            {textDocument = params}, function(err, result)
+    --                 if err then return end
+    --
+    --                 if result then
+    --                     vim.lsp.diagnostic.on_publish_diagnostics(nil,
+    --                                                               vim.tbl_extend(
+    --                                                                   'keep',
+    --                                                                   params, {
+    --                             diagnostics = result.items
+    --                         }), {client_id = client.id}, {})
+    --                 end
+    --             end)
+    --         end
+    --     })
+    -- end
+
+    if client.supports_method("textDocument/codeLens") then
+        vim.api.nvim_create_autocmd({'BufEnter', 'BufWritePre', 'CursorHold'}, {
+            buffer = bufnr,
+
+            callback = function() vim.lsp.codelens.refresh() end
+        })
+    end
+
     local keys = {
         {'i', '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>'}, {
             'n', '<c-g><c-d>', split_definition_fun(client, buffer_extension),
@@ -184,6 +224,10 @@ local on_attach = function(client, bufnr)
         }, {
             'n', 'gr', reference_fun(client, buffer_extension),
             {desc = "Go to Reference", buffer = 0}
+        }, {
+            'n', 'gt',
+            "<cmd>lua require('telescope.builtin').lsp_type_definitions()<CR>",
+            {desc = "Go to Type", buffer = 0}
         }, {'n', 'K', hover_fun(client, buffer_extension), desc = "Hover info"},
         {'n', 'mv', '<Cmd>lua vim.lsp.buf.rename()<CR>', desc = "Rename"}, {
             'n', '<leader>ed', '<cmd>lua vim.diagnostic.open_float()<CR>',
@@ -194,10 +238,28 @@ local on_attach = function(client, bufnr)
         }, {
             'n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>',
             {desc = "Diagnostic: Next", buffer = 0}
+        }, {
+            'n', '<leader>hi', function()
+                pcall(function()
+                    if vim.lsp.inlay_hint.is_enabled(0) then
+                        vim.lsp.inlay_hint.enable(0, false)
+                    else
+                        vim.lsp.inlay_hint.enable(0, true)
+                    end
+                end)
+            end
         }
     }
 
     for _, v in ipairs(keys) do vim.keymap.set(unpack(v)) end
 end
+
+vim.lsp.handlers["textDocument/hover"] =
+    vim.lsp.with(vim.lsp.handlers.hover, {border = "rounded"})
+
+vim.lsp.handlers["textDocument/signatureHelp"] =
+    vim.lsp.with(vim.lsp.handlers.signature_help, {border = "rounded"})
+
+vim.diagnostic.config {float = {border = "rounded"}}
 
 return {on_attach = on_attach}
